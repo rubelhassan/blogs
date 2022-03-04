@@ -91,7 +91,7 @@ Using Optionals can bring the following benefits to your code:
 2. Enforces "null checking" by encapsulating the actual value
 3. Can be used in functional way
 
-#### Creating Optional Objects
+### Creating Optional Objects
 
 We can think of three types of values in an Optional object - **empty**, **nullable**, and **
 non-null**. Let's see how you can create different types of Optionals using static factory methods
@@ -116,6 +116,9 @@ Nullable Optional indicates the value in it is mandatory to be present and can b
 Optional.of(value)
 ```
 
+![Optional Diagram](diagrams/optional_diagram.png)
+
+### Code Example Using Optional
 So, I think you have got enough about Optional and how to create an object of Optional. Let's
 redesign the above classes using Optionals. 
 
@@ -178,9 +181,8 @@ Now let's rewrite the `getLoanAmountOfStudent` method using `Optional` with the 
 
 ```java
   public Double getLoanAmountOfStudent(Student student) {
-    Optional<Student> opStudent = Optional.of(student);
-    // if student is 'null', an exception will be thrown when get() is called and that is expected
-    if (opStudent.get().getAccount().isPresent()) { 
+    Optional<Student> opStudent = Optional.ofNullable(student);
+    if (opStudent.isPresent() && opStudent.get().getAccount().isPresent()) { 
       Account account = opStudent.get().getAccount().get();
       if (account.getLoan().isPresent()) {
         return account.getLoan().get().getAmount();
@@ -192,15 +194,73 @@ Now let's rewrite the `getLoanAmountOfStudent` method using `Optional` with the 
 
 This much better in terms of code quality at least we're not going to get unexpected
 `NullPointerException`. But it still suffers in terms of readability because we're still producing
-the nested logical conditions unnecessarily and using imperative style of programming.
+the nested logical conditions unnecessarily. That's the problem of imperative style of programming - 
+easy to implement but hard to read in many cases.
 
-Let's think about a declarative way of implementation where you can write programs using functional
-programming principles. You can use `Optional` as a **Monad** - 
+### Optional as Monad
+Let's think of declarative way of implementation where you can write programs using functional
+programming principles. You can think `Optional` as a [**Monad**](https://en.wikipedia.org/wiki/Monad_(functional_programming)).
+A monad is a type that wraps another type and gives some form of quality to the underlying
+type. `Optional` provides `map`, `flatMap`, and `filter` like methods ([see documentation](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html))
+similar to Stream APIto composes a sequence of function calls (a "pipeline") and each steps returns a monadic value which
+can be fed into the next step in the pipeline.
 
-## Creating Optionals:
+```java
+public Double getLoanAmountOfStudent(Student student) {
+  return Optional.ofNullable(student)
+     .flatMap(Student::getAccount)
+     .flatMap(Account::getLoan)
+     .map(Loan::getAmount)
+     .orElse(0d);
+}
+```
 
-* Empty optional
-* Optional with non-null value
-* Optional with null value
+Voila!, the code is now super readable with less complexity and that's the beauty of Optional as a
+Monad. But if you notice carefully the code still may throw the `NullPointerException` if `account`
+field of `Student` object has `null` reference and that's expected because we wrote the getter as
+non-null Optional.
 
-## Extracting and transforming values from Optionals: 
+| Using `Optional` as method arguments is not recommended as it creates extra layer of wrapping.
+
+### Streaming with Optional
+
+Let's say we want to find the count of students who has taken loan greater than a certain amount. 
+We can write a method like below for that.
+```java
+public long countStudentHavingLoanGreaterThanAmount(List<Student> students, double amount) {
+    return students.stream()
+        .map(Student::getAccount)
+        .map(acc -> acc.flatMap(Account::getLoan))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .map(Loan::getAmount)
+        .filter(loan -> loan > amount)
+        .count();
+  }
+```
+
+See here we are streaming over the list of students, transforming to account and then extracting
+loan from each account. The problem is that every account of students doesn't have loans. So in the
+stream of `Stream<Optional<Loan>>` we may get empty optional. To get rid of empty optionals we have
+used a filter and map to get non-null optionals. And finally filter and count the number of students
+having loan over a certain amount.
+
+From Java 9 the stream() method has been introduced in the Optional class that may seem convenient in
+this case. See the code below.
+
+```java
+public static long countStudentHavingLoanGreaterThanAmount(List<Student> students, double amount) {
+  return students.stream()
+     .map(Student::getAccount)
+     .map(acc -> acc.flatMap(Account::getLoan))
+     .flatMap(Optional::stream)
+     .map(Loan::getAmount)
+     .filter(loan -> loan > amount)
+     .count();
+}
+
+```
+Here, you can see we've used `Optional::stream` that is converting `Stream<Optional<Loang>>` to 
+`Stream<Loan>` directly with a single operation.
+
+Don't forget to leave any feedback. Happy coding 😊
