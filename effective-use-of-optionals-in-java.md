@@ -282,7 +282,7 @@ evaluated only when the value is empty.
 ```java
 public Student findStudentById(String id) {
      return studentCache.getStudent(id)
-             .orElse(() ->
+             .orElseGet(() ->
                      studentService.getStudent(id)
                              .orElseThrow(() -> new NotFoundException("Student is not found with id" + id))
              );
