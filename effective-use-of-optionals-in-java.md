@@ -134,7 +134,7 @@ using Optionals.
   }
 ```
 
-You can see that I have only changed the `Loan` type to `Optional<Loan>` in the `Account` class. That a clear indication
+You can see that I have only changed the `Loan` type to `Optional<Loan>` in the `Account` class. That is a clear indication
 for a developer that an account may not have a loan against it, and it's planned that way. Other fields remain same as
 earlier and indicates composition that means being pointing to `null` reference for these variables indicates either
 missing data or bug in your code.
@@ -192,9 +192,9 @@ Now let's rewrite the `getLoanAmountOfStudent` method using `Optional` with the 
   }
 ```
 
-This much better in terms of code quality at least we're not going to get unexpected NPE. But it
-still suffers in terms of readability because we're still producing the nested logical conditions unnecessarily. That's
-the problem of imperative style of programming - _easy to implement but hard to read in many cases_.
+This is much better in terms of code quality, at least we're not going to get unexpected NPE. But it still suffers in
+terms of readability because we're still producing the nested logical conditions unnecessarily. That's the problem of
+imperative style of programming - _easy to implement but hard to read in many cases_.
 
 > Avoid using `isPresent()` and `get()` pairs, they are not elegant
 
@@ -224,6 +224,19 @@ Voila!, the code is now super readable with less complexity and that's the beaut
 notice carefully the code still may throw the `NullPointerException` if `account` field of `Student` object has `null`
 reference and that's expected because we wrote the getter as non-null Optional.
 
+But we still have the problem with the return-type of `getLoanAmountOfStudent` method. As it returns `0` if there's no
+loan against an account while it should have given the indication of absence of value. You can rewrite the method like
+below using `Optional` to clear the intention.
+
+```java
+public Optional<Double> getLoanAmountOfStudent(Student student) {
+    return Optional.ofNullable(student)
+        .flatMap(Student::getAccount)
+        .flatMap(Account::getLoan)
+        .map(Loan::getAmount)
+        .or(Optional::empty);
+}
+```
 > Using `Optional` as method arguments is not recommended as it creates extra layer of wrapping.
 
 ### Streaming with Optional
@@ -286,6 +299,17 @@ public Student findStudentById(String id) {
                      studentService.getStudent(id)
                              .orElseThrow(() -> new NotFoundException("Student is not found with id" + id))
              );
+ }
+```
+
+From Java 9, `Optional` has been enhanced with `or(Supplier<? extends Optional<? extends T>> supplier)` method which can
+execute an action and return `Optional` instead of direct value. So, the above method can be further refactored like
+below.
+
+```java
+ public Optional<Student> findStudentById(String id) {
+     return  cacheService.GetStudent(id)
+             .or(() -> studentServiceGetStudent(id));
  }
 ```
 
