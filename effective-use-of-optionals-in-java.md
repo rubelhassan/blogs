@@ -262,8 +262,8 @@ From Java 9 the `stream()` method has been introduced in the Optional class that
 optional elements to a Stream of present value elements. It may seem convenient in this case. See the code below.
 
 ```java
-public static long countStudentHavingLoan(List<Student> students) {
-     return students.stream()
+public long countStudentHavingLoan(List<Student> students) {
+    return students.stream()
      .map(Student::getAccount)
      .map(acc -> acc.flatMap(Account::getLoan))
      .flatMap(Optional::stream)
