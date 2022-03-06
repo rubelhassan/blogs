@@ -4,9 +4,9 @@
 If you are a Java developer then you must have used `null` to denote as "the absence of a value". And it might not be
 the case that you never got a `NullPointerException` (NPE) in any of your Java program. If you have written code in Java 8 or
 later, then you might have known that Java has introduced `java.util.Optional<T>` as a better alternative to `null`. In
-this article I'm going to explain what is `Optional` and how you can use it effectively. But before going too far, I
-want you to think about the problems of using `null` and how `null` has created a useful(!) exception(
-NPE) to a nightmare to all the existing Java developers.
+this article, I'm going to explain what is `Optional` and how you can use it effectively. But before going too far, I
+want you to think about the problems of using `null` and how `null` has created a useful(!) exception (NPE) to a
+nightmare to all the existing Java developers.
 
 I would like to mention the most common problems you may face while using `null` like the following:
 
@@ -42,7 +42,7 @@ public class Loan {
 }
 ```
 
-Now if you want to retrieve loan information of a student then you may write a method simply like this.
+Now if you want to retrieve loan information of a student then you may write a method simply like this:
 
 ```java
 public Double getLoanAmountOfStudent(Student student){
@@ -50,8 +50,8 @@ public Double getLoanAmountOfStudent(Student student){
 }
 ```
 
-The problem with the code is that if any of the reference in the call is null then it will cause **train wreck** by
-throwing the NPE. To solve this you may rewrite the method like below.
+The problem with the code is that if any of the reference in the call is null then, it will cause **train wreck** by
+throwing the NPE. To solve this you may rewrite the method like below:
 
 ```java
 public Double getLoanAmountOfStudent(Student student) {
@@ -71,7 +71,7 @@ public Double getLoanAmountOfStudent(Student student) {
 ```
 
 Now this method has become hard to read because everytime you have a doubt on an object reference, you need to check the
-nullability, if you miss one `null` check then it may produce `NulPointerException` exception. Another problem is with
+nullability. If you miss one `null` check then it may produce `NulPointerException` exception. Another problem is with
 the return type, by observing the returned value of the method you can't say whether the student does not have a loan or
 the loan amount has become 0 (maybe paid off the loan already).
 
@@ -79,14 +79,14 @@ the loan amount has become 0 (maybe paid off the loan already).
 
 Java 8 introduces a new class called java.util.Optional<T> that is inspired by Haskell and Scala. The class may contain
 an optional value otherwise empty value. The intention of the Optional class isn’t to replace every single `null`
-reference rather help you design comprehensible APIs, bring better readability, and obviously help to avoid
+reference, rather help you design comprehensible APIs, bring better readability, and obviously help to avoid
 the NPE.
 
 Using **Optionals** can bring the following benefits to your code:
 
 1. Declaring a variable of type `Optional<T>` indicates that the variable of that type may contain missing value.
-2. Enforces "null checking" by encapsulating the actual value
-3. Can be used in functional way
+2. Enforces "null checking" by encapsulating the actual value.
+3. Can be used in functional way.
 
 ![Optional Diagram](diagrams/optional_diagram.png)
 
@@ -177,7 +177,7 @@ public class Loan {
    // other fields, getters, and setters are omitted for simplicity
 }
 ```
-Now let's rewrite the `getLoanAmountOfStudent` method using `Optional` with the updated domains.
+Now, let's rewrite the `getLoanAmountOfStudent` method using `Optional` with the updated domains.
 
 ```java
   public Double getLoanAmountOfStudent(Student student) {
@@ -226,7 +226,7 @@ reference and that's expected because we wrote the getter as non-null Optional.
 
 But we still have the problem with the return-type of `getLoanAmountOfStudent` method. As it returns `0` if there's no
 loan against an account while it should have given the indication of absence of value. You can rewrite the method like
-below using `Optional` to clear the intention.
+below using `Optional` to clear the intention as:
 
 ```java
 public Optional<Double> getLoanAmountOfStudent(Student student) {
@@ -241,7 +241,7 @@ public Optional<Double> getLoanAmountOfStudent(Student student) {
 
 ### Streaming with Optional
 
-Let's say we want to find the count of students who has a loan. We can write a method like below for that.
+Let's say, we want to find the count of students who has a loan. We can write a method like below for that:
 ```java
 public long countStudentHavingLoan(List<Student> students) {
     return students.stream()
@@ -253,13 +253,13 @@ public long countStudentHavingLoan(List<Student> students) {
   }
 ```
 
-See here we are streaming over the list of students, transforming to account and then extracting loan from each account.
+See, here we are streaming over the list of students, transforming to account and then extracting loan from each account.
 The problem is that every account of students doesn't have loans. So in the stream of `Stream<Optional<Loan>>` we may
-get empty optional. To get rid of empty optionals we have used a filter and map to get non-null optionals. And finally
+get empty optional. To get rid of empty optionals, we have used a filter and map to get non-null optionals. And finally
 filter and count the number of students having a loan.
 
-From Java 9 the `stream()` method has been introduced in the Optional class that can be used to transform a Stream of
-optional elements to a Stream of present value elements. It may seem convenient in this case. See the code below.
+From Java 9, the `stream()` method has been introduced in the Optional class that can be used to transform a Stream of
+optional elements to a Stream of present value elements. It may seem convenient in this case. See the code below:
 
 ```java
 public long countStudentHavingLoan(List<Student> students) {
@@ -271,13 +271,13 @@ public long countStudentHavingLoan(List<Student> students) {
 }
 ```
 
-Here, you can see we've used `Optional::stream` that is converting `Stream<Optional<Loang>>` to `Stream<Loan>` directly
+Here, you can see we've used `Optional::stream` that is converting `Stream<Optional<Loan>>` to `Stream<Loan>` directly
 with a single operation and removing empty Optionals.
 
 ### Use Optional Lazily while Returning Computed Value
 
-Suppose, you're writing a method to find student by id, first you find in cache and if not found then query to database
-and retrieve student otherwise throw exception. The method look like below.
+Suppose, you're writing a method to find student by id. For that, at first you try to find in cache and if not found
+then query to the database and retrieve student, otherwise throw exception. The method look like below:
 
 ```java
 public Student findStudent(String id) {
@@ -302,9 +302,9 @@ public Student findStudentById(String id) {
  }
 ```
 
-From Java 9, `Optional` has been enhanced with `or(Supplier<? extends Optional<? extends T>> supplier)` method which can
-execute an action and return `Optional` instead of direct value. So, the above method can be further refactored like
-below.
+From Java 9, `Optional` has been enhanced with `or(Supplier<? extends Optional<? extends T>> supplier)` method, which
+can execute an action and return `Optional` instead of direct value. So, the above method can be further refactored like
+below:
 
 ```java
  public Optional<Student> findStudentById(String id) {
